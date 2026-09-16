@@ -120,7 +120,7 @@ export default {
 		const outcome = await deliver({
 			// forward() resolves to an EmailSendResult; deliver() wants Promise<void>.
 			forward: async () => { await message.forward(env.FORWARD_TO); },
-			store: () => receiveEmail(message, env, ctx),
+			store: () => receiveEmail(message, env),
 			log: (note, e) => console.error(note, (e as Error).message, (e as Error).stack),
 		});
 		console.log(`email ${outcome}: from=${message.from} to=${message.to}`);

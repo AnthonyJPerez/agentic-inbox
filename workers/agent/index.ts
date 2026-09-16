@@ -32,6 +32,11 @@ import {
 import { Folders, FOLDER_TOOL_DESCRIPTION, MOVE_FOLDER_TOOL_DESCRIPTION } from "../../shared/folders";
 import type { Env } from "../types";
 
+// Upstream used @cf/moonshotai/kimi-k2.5, deprecated 2026-05-30 and aliased
+// to a pricier model. glm-4.7-flash is Cloudflare's suggested replacement
+// with tool calling. `as any` because the provider's model union predates it.
+const AGENT_MODEL = "@cf/zai-org/glm-4.7-flash" as any;
+
 // AI SDK v6 changed tool() overloads significantly. We define tools as plain
 // objects matching the Tool type to avoid overload resolution issues.
 function defineTool(def: {
@@ -281,7 +286,7 @@ export class EmailAgent extends AIChatAgent<any> {
 		const systemPrompt = await getSystemPrompt(env, mailboxId);
 
 		const result = streamText({
-			model: workersai("@cf/moonshotai/kimi-k2.5"),
+			model: workersai(AGENT_MODEL),
 			system: systemPrompt,
 			messages: await convertToModelMessages(this.messages),
 			tools,
@@ -463,7 +468,7 @@ Based on the email content and thread context above, draft a reply using draft_r
 
 		try {
 			const result = await generateText({
-				model: workersai("@cf/moonshotai/kimi-k2.5"),
+				model: workersai(AGENT_MODEL),
 				system: systemPrompt,
 				messages: await convertToModelMessages(messages),
 				tools,

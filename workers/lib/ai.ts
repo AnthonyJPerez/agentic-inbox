@@ -29,8 +29,9 @@ export async function isPromptInjection(ai: Ai, bodyHtml: string | null | undefi
 
 	try {
 		const response = (await ai.run(
-			// @ts-expect-error — model string not in generated union
-			"@cf/meta/llama-3.1-8b-instruct-fast",
+			// The name upstream used is no longer in the Workers AI catalog, and the
+			// scan fails closed, which would make the agent refuse every thread.
+			"@cf/meta/llama-3.2-3b-instruct",
 			{
 				messages: [
 					{ role: "system", content: INJECTION_PROMPT },

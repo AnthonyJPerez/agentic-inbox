@@ -104,7 +104,7 @@ export async function handleReplyEmail(c: AppContext) {
 				contentId: att.contentId,
 			})),
 			headers: buildThreadingHeaders(originalMsgId, references),
-		}).catch((e) => {
+		}, c.env.FORWARD_TO).catch((e) => {
 			console.error("Deferred reply delivery failed:", (e as Error).message);
 		}),
 	);
@@ -189,7 +189,7 @@ export async function handleForwardEmail(c: AppContext) {
 				disposition: att.disposition,
 				contentId: att.contentId,
 			})),
-		}).catch((e) => {
+		}, c.env.FORWARD_TO).catch((e) => {
 			console.error("Deferred forward delivery failed:", (e as Error).message);
 		}),
 	);

@@ -440,7 +440,7 @@ export async function toolSendReply(
 			subject: params.subject,
 			html: fullBodyHtml,
 			headers: buildThreadingHeaders(originalMsgId, references),
-		});
+		}, env.FORWARD_TO);
 	} catch (e) {
 		console.error("Email send failed:", (e as Error).message);
 		return { error: `Failed to send reply: ${(e as Error).message}` };
@@ -504,7 +504,7 @@ export async function toolSendEmail(
 			from: mailboxId,
 			subject: params.subject,
 			html: sanitizedBody,
-		});
+		}, env.FORWARD_TO);
 	} catch (e) {
 		console.error("Email send failed:", (e as Error).message);
 		return { error: `Failed to send email: ${(e as Error).message}` };

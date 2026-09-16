@@ -346,21 +346,21 @@ async function streamToArrayBuffer(stream: ReadableStream, streamSize: number) {
 	return result;
 }
 
-async function receiveEmail(message: { raw: ReadableStream; rawSize: number; to: string }, env: Env) {
+async function receiveEmail(message: { raw: ReadableStream; rawSize: number; to: string }, env: Env): Promise<"stored" | "ignored"> {
 	const rawEmail = await streamToArrayBuffer(message.raw, message.rawSize);
 	const parsedEmail = await new PostalMime().parse(rawEmail);
 
 	// The envelope recipient chooses the mailbox. Headers are display only:
 	// a message with contact@ in Bcc has no To header naming it at all.
 	const mailboxId = pickMailbox(message.to, (env.EMAIL_ADDRESSES ?? []) as string[]);
-	if (!mailboxId) { console.log(`Ignoring email: envelope recipient ${message.to} is not a configured mailbox.`); return; }
+	if (!mailboxId) { console.log(`Ignoring email: envelope recipient ${message.to} is not a configured mailbox.`); return "ignored"; }
 
 	const allRecipients = (parsedEmail.to || []).map((t) => t.address?.toLowerCase()).filter(Boolean) as string[];
 	const ccRecipients = (parsedEmail.cc || []).map((e) => e.address?.toLowerCase()).filter(Boolean) as string[];
 	const bccRecipients = (parsedEmail.bcc || []).map((e) => e.address?.toLowerCase()).filter(Boolean) as string[];
 
 	const messageId = crypto.randomUUID();
-	if (!(await env.BUCKET.head(`mailboxes/${mailboxId}.json`))) { console.log(`Ignoring email for ${mailboxId}: mailbox does not exist`); return; }
+	if (!(await env.BUCKET.head(`mailboxes/${mailboxId}.json`))) { console.log(`Ignoring email for ${mailboxId}: mailbox does not exist`); return "ignored"; }
 
 	const stub = env.MAILBOX.get(env.MAILBOX.idFromName(mailboxId));
 
@@ -398,6 +398,7 @@ async function receiveEmail(message: { raw: ReadableStream; rawSize: number; to:
 		thread_id: threadId, message_id: originalMessageId, raw_headers: JSON.stringify(parsedEmail.headers),
 	}, attachmentData);
 
+	return "stored";
 }
 
 export { app, receiveEmail };

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { withCopy } from "./email-sender";
+import { sendEmail, withCopy } from "./email-sender";
 
 describe("withCopy", () => {
 	// Annotated so the fixture declares `bcc?` like SendEmailParams does: a bare
@@ -35,5 +35,20 @@ describe("withCopy", () => {
 		const p = { ...base, bcc: ["x@example.com"] };
 		withCopy(p, "me@gmail.com");
 		expect(p.bcc).toEqual(["x@example.com"]);
+	});
+});
+
+describe("sendEmail", () => {
+	it("hands the binding a message whose bcc carries the copy address", async () => {
+		let captured: any = null;
+		const binding = { send: async (m: unknown) => { captured = m; return { messageId: "m1" }; } };
+		const result = await sendEmail(
+			binding as any,
+			{ to: "a@example.com", from: "contact@elided.app", subject: "s", text: "t" },
+			"me@gmail.com",
+		);
+		expect(result).toEqual({ messageId: "m1" });
+		expect(captured.bcc).toEqual(["me@gmail.com"]);
+		expect(captured.to).toBe("a@example.com");
 	});
 });

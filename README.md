@@ -17,6 +17,12 @@ and `docs/mail-sending.md`). What differs from upstream:
 - The sender binding may only send as `contact@elided.app`.
 - No auto-draft on inbound. The agent runs on `@cf/zai-org/glm-4.7-flash`,
   the injection scan on `@cf/meta/llama-3.2-3b-instruct`.
+- The agent's `/onNewEmail` route has no internal caller now that the inbound
+  auto-draft is gone. It stays reachable behind Access, sends nothing by itself,
+  and is kept as upstream wrote it so a merge from upstream stays clean.
+- Three model names sit on the draft path, not two: the agent's and the scan's
+  above, and `@cf/meta/llama-4-scout-17b-16e-instruct` in `verifyDraft`
+  (`workers/lib/ai.ts`). A deprecation sweep has to check all three.
 - Three Worker secrets: `POLICY_AUD`, `TEAM_DOMAIN`, `FORWARD_TO`.
 - `npm test` runs the unit tests (vitest).
 
@@ -43,7 +49,7 @@ https://github.com/cloudflare/agentic-inbox/issues/4#issuecomment-4269118513
      [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/agentic-inbox)
 
 2. **Configure Cloudflare Access** -- Enable [one-click Cloudflare Access](https://developers.cloudflare.com/changelog/post/2025-10-03-one-click-access-for-workers/) on your Worker under Settings > Domains & Routes. The modal will show your `POLICY_AUD` and `TEAM_DOMAIN` values. `TEAM_DOMAIN` can be either your Access team URL or the full `.../cdn-cgi/access/certs` URL. **You must set these as secrets for your Worker.**
-3. **Set up Email Routing** -- In the Cloudflare dashboard, go to your domain > Email Routing and create a catch-all rule that forwards to this Worker
+3. **Set up Email Routing** -- In the Cloudflare dashboard, go to your domain > Email Routing and create a rule for the one address (for this fork, contact@elided.app) whose action is "Send to a Worker" naming this Worker. Leave the catch-all rule disabled.
 4. **Enable Email Service** -- The worker needs the `send_email` binding to send outbound emails. See [Email Service docs](https://developers.cloudflare.com/email-routing/email-workers/send-email-workers/)
 5. **Create a mailbox** -- Visit your deployed app and create a mailbox for any address on your domain (e.g. `hello@example.com`)
 
@@ -79,7 +85,7 @@ npm run dev
 ### Configuration
 
 1. Set your domain in `wrangler.jsonc`
-2. Create an R2 bucket named `agentic-inbox`: `wrangler r2 bucket create agentic-inbox`
+2. Create an R2 bucket named `elided-mail` (the name in wrangler.jsonc); R2 must be enabled on the account first: `wrangler r2 bucket create elided-mail`
 
 ### Deploy
 

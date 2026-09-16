@@ -55,6 +55,7 @@ export async function sendEmail(
 	params: SendEmailParams,
 	copyTo?: string,
 ): Promise<{ messageId: string }> {
+	if (!copyTo) console.error("FORWARD_TO is not set: this send leaves no copy in the forwarded-to inbox");
 	const p = withCopy(params, copyTo);
 	const message: Record<string, unknown> = {
 		to: p.to,

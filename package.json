@@ -13,6 +13,7 @@
 		}
 	},
 	"scripts": {
+		"prebuild": "vitest run",
 		"build": "react-router build",
 		"cf-typegen": "wrangler types",
 		"deploy": "npm run build && wrangler deploy",

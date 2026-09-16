@@ -117,12 +117,16 @@ export default {
 			// Email Routing retries, then bounces, and the sender learns.
 			throw new Error("FORWARD_TO secret is not set");
 		}
+		// receiveEmail returns normally when it ignores a message, so deliver()
+		// reporting "stored" only means the store call did not throw. Capture what
+		// it actually did, so the logged line is evidence a record was written.
+		let stored: "stored" | "ignored" = "stored";
 		const outcome = await deliver({
 			// forward() resolves to an EmailSendResult; deliver() wants Promise<void>.
 			forward: async () => { await message.forward(env.FORWARD_TO); },
-			store: () => receiveEmail(message, env),
+			store: async () => { stored = await receiveEmail(message, env); },
 			log: (note, e) => console.error(note, (e as Error).message, (e as Error).stack),
 		});
-		console.log(`email ${outcome}: from=${message.from} to=${message.to}`);
+		console.log(`email ${outcome === "stored" ? stored : outcome}: from=${message.from} to=${message.to}`);
 	},
 };

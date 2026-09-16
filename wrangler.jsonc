@@ -14,7 +14,8 @@
 		// POLICY_AUD and TEAM_DOMAIN (Cloudflare Access; TEAM_DOMAIN may be the
 		// base Access URL or the full /cdn-cgi/access/certs URL) and FORWARD_TO
 		// (the verified destination every inbound message is forwarded to and
-		// every send is blind-copied to). The Worker fails closed without them.
+		// every send is blind-copied to). Without the Access pair the Worker answers 500;
+		// without FORWARD_TO inbound mail is refused and outbound sends log an error and go uncopied.
 		"DOMAINS": "elided.app",
 		"EMAIL_ADDRESSES": ["contact@elided.app"]
 	},

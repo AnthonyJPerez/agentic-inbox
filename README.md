@@ -3,6 +3,25 @@
   <p><em>A self-hosted email client with an AI agent, running entirely on Cloudflare Workers</em></p>
 </div>
 
+## This fork: elided-mail
+
+The mailbox for `contact@elided.app`, deployed by Workers Builds from this
+repository's `main` as the Worker `elided-mail`. Design and operations live
+in the Elided repository (`docs/superpowers/specs/2026-09-16-contact-mailbox-design.md`
+and `docs/mail-sending.md`). What differs from upstream:
+
+- The inbound handler forwards every message to the `FORWARD_TO` secret
+  **before** storing it (`workers/lib/deliver.ts`); a store failure after
+  the forward is logged, not bounced. Mail is routed by envelope recipient.
+- Every send blind-copies `FORWARD_TO` (`withCopy` in `workers/email-sender.ts`).
+- The sender binding may only send as `contact@elided.app`.
+- No auto-draft on inbound. The agent runs on `@cf/zai-org/glm-4.7-flash`,
+  the injection scan on `@cf/meta/llama-3.2-3b-instruct`.
+- Three Worker secrets: `POLICY_AUD`, `TEAM_DOMAIN`, `FORWARD_TO`.
+- `npm test` runs the unit tests (vitest).
+
+Upstream's instructions follow.
+
 Agentic Inbox lets you send, receive, and manage emails through a modern web interface -- all powered by your own Cloudflare account. Incoming emails arrive via [Cloudflare Email Routing](https://developers.cloudflare.com/email-routing/), each mailbox is isolated in its own [Durable Object](https://developers.cloudflare.com/durable-objects/) with a SQLite database, and attachments are stored in [R2](https://developers.cloudflare.com/r2/).
 
 An **AI-powered Email Agent** can read your inbox, search conversations, and draft replies -- built with the [Cloudflare Agents SDK](https://developers.cloudflare.com/agents/) and [Workers AI](https://developers.cloudflare.com/workers-ai/).

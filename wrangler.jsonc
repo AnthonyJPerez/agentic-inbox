@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "agentic-inbox",
+	"name": "elided-mail",
 	"compatibility_date": "2025-11-28",
 	"main": "./workers/app.ts",
 	"observability": {
@@ -10,23 +10,26 @@
 		"nodejs_compat"
 	],
 	"vars": {
-		// Production deploys must also define POLICY_AUD and TEAM_DOMAIN.
-		// TEAM_DOMAIN may be the base Access URL or the full /cdn-cgi/access/certs URL.
-		// The worker now fails closed outside local development if Access is not configured.
-		"DOMAINS": "example.com",
-		"EMAIL_ADDRESSES": []
+		// Production also needs three secrets, set in the dashboard, never here:
+		// POLICY_AUD and TEAM_DOMAIN (Cloudflare Access; TEAM_DOMAIN may be the
+		// base Access URL or the full /cdn-cgi/access/certs URL) and FORWARD_TO
+		// (the verified destination every inbound message is forwarded to and
+		// every send is blind-copied to). The Worker fails closed without them.
+		"DOMAINS": "elided.app",
+		"EMAIL_ADDRESSES": ["contact@elided.app"]
 	},
 	"send_email": [
 		{
 			"name": "EMAIL",
+			"allowed_sender_addresses": ["contact@elided.app"],
 			"remote": true
 		}
 	],
 	"r2_buckets": [
 		{
 			"binding": "BUCKET",
-			"bucket_name": "agentic-inbox",
-			"preview_bucket_name": "agentic-inbox"
+			"bucket_name": "elided-mail",
+			"preview_bucket_name": "elided-mail"
 		}
 	],
 	"ai": {

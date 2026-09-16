@@ -5,4 +5,6 @@
 export interface Env extends Cloudflare.Env {
 	POLICY_AUD: string;
 	TEAM_DOMAIN: string;
+	/** The verified destination address every inbound message is forwarded to and every send is blind-copied to. A Worker secret. */
+	FORWARD_TO: string;
 }

@@ -7,6 +7,7 @@ import { Hono } from "hono";
 import { jwtVerify, createRemoteJWKSet } from "jose";
 import { createRequestHandler } from "react-router";
 import { app as apiApp, receiveEmail } from "./index";
+import { deliver } from "./lib/deliver";
 import { EmailMCP } from "./mcp";
 import type { Env } from "./types";
 
@@ -110,18 +111,18 @@ app.all("*", (c) => {
 // Export the Hono app as the default export with an email handler
 export default {
 	fetch: app.fetch,
-	async email(
-		event: { raw: ReadableStream; rawSize: number },
-		env: Env,
-		ctx: ExecutionContext,
-	) {
-		try {
-			await receiveEmail(event, env, ctx);
-		} catch (e) {
-			console.error("Failed to process incoming email:", (e as Error).message, (e as Error).stack);
-			// Re-throw so Cloudflare's email routing can retry delivery or bounce the message.
-			// Swallowing the error would silently drop the email.
-			throw e;
+	async email(message: ForwardableEmailMessage, env: Env, ctx: ExecutionContext) {
+		if (!env.FORWARD_TO) {
+			// Refuse rather than accept mail that would have no forwarded copy.
+			// Email Routing retries, then bounces, and the sender learns.
+			throw new Error("FORWARD_TO secret is not set");
 		}
+		const outcome = await deliver({
+			// forward() resolves to an EmailSendResult; deliver() wants Promise<void>.
+			forward: async () => { await message.forward(env.FORWARD_TO); },
+			store: () => receiveEmail(message, env, ctx),
+			log: (note, e) => console.error(note, (e as Error).message, (e as Error).stack),
+		});
+		console.log(`email ${outcome}: from=${message.from} to=${message.to}`);
 	},
 };
